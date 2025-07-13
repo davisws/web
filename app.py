@@ -2,6 +2,7 @@ from flask import Flask, Response
 
 app = Flask(__name__)
 
+# 🏠 Home route (main dashboard)
 @app.route("/")
 def dashboard():
     html = """
@@ -12,6 +13,10 @@ def dashboard():
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>NovaBot Dashboard</title>
       <style>
+        html {
+          scroll-behavior: smooth;
+        }
+
         body {
           background-color: #0a0a0a;
           color: #ffffff;
@@ -62,29 +67,89 @@ def dashboard():
     </head>
     <body>
       <nav>
-        <a href="#overview">Overview</a>
-        <a href="#commands">Custom Commands</a>
-        <a href="#settings">Settings</a>
+        <a href="/">Home</a>
+        <a href="/manager">Manager</a>
+        <a href="/settings">Settings</a>
       </nav>
 
       <section id="overview">
         <h1>NovaBot Dashboard 🚀</h1>
-        <p>Manage your server settings, create custom commands, and control NovaBot.</p>
-      </section>
-
-      <section id="commands">
-        <h2>🛠️ Custom Commands</h2>
-        <p>Here you’ll be able to create and manage custom bot commands for your server.</p>
-      </section>
-
-      <section id="settings">
-        <h2>⚙️ Settings</h2>
-        <p>Customize NovaBot’s behavior, connect your Discord server, and more settings coming soon!</p>
+        <p>Manage your server settings, create custom commands, and control NovaBot like a pro.</p>
       </section>
     </body>
     </html>
     """
     return Response(html, mimetype='text/html')
+
+
+# ⚙️ /manager route
+@app.route("/manager")
+def manager():
+    html = """
+    <html>
+    <head>
+      <title>Manager Panel</title>
+      <style>
+        body {
+          background-color: #0a0a0a;
+          color: #ffffff;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          padding: 100px;
+        }
+        a {
+          color: #00aaff;
+          text-decoration: none;
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>🧠 Manager Panel</h1>
+      <p>Custom command editor coming soon...</p>
+      <br><br>
+      <a href="/">← Back to Dashboard</a>
+    </body>
+    </html>
+    """
+    return Response(html, mimetype="text/html")
+
+
+# ⚙️ /settings route
+@app.route("/settings")
+def settings():
+    html = """
+    <html>
+    <head>
+      <title>Settings</title>
+      <style>
+        body {
+          background-color: #0a0a0a;
+          color: #ffffff;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          padding: 100px;
+        }
+        a {
+          color: #00aaff;
+          text-decoration: none;
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>⚙️ Settings</h1>
+      <p>Server preferences, logging, and bot behavior settings coming soon.</p>
+      <br><br>
+      <a href="/">← Back to Dashboard</a>
+    </body>
+    </html>
+    """
+    return Response(html, mimetype="text/html")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
