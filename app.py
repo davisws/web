@@ -3,10 +3,11 @@ import os
 import requests
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET", "secret")
+app.secret_key = os.getenv("FLASK_SECRET", "super-secret")
 
-DISCORD_CLIENT_ID = os.getenv("1392627972581621782")
-DISCORD_CLIENT_SECRET = os.getenv("_-cFcAr3nZV8FEfRv7Mmiq48ShGq8o-5")
+# Load env vars properly (DO NOT hardcode values!)
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://novabot.info/callback")
 
 DISCORD_API_BASE = "https://discord.com/api"
@@ -54,7 +55,7 @@ def index():
 @app.route("/login")
 def login():
     return redirect(
-        f"{DISCORD_API_BASE}/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={OAUTH_SCOPE}"
+        f"{DISCORD_API_BASE}/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={OAUTH_SCOPE.replace(' ', '%20')}"
     )
 
 # ---------- OAuth Callback ----------
@@ -77,12 +78,10 @@ def callback():
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    # Exchange code for token
     response = requests.post(f"{DISCORD_API_BASE}/oauth2/token", data=data, headers=headers)
     response.raise_for_status()
     tokens = response.json()
 
-    # Get user info
     user_res = requests.get(
         f"{DISCORD_API_BASE}/users/@me",
         headers={"Authorization": f"Bearer {tokens['access_token']}"}
@@ -98,6 +97,10 @@ def callback():
 def logout():
     session.clear()
     return redirect("/")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
