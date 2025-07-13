@@ -5,8 +5,9 @@ from flask import Flask, redirect, request, session, render_template_string
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET", "supersecret")
 
-DISCORD_CLIENT_ID = os.getenv("1392627972581621782")
-DISCORD_CLIENT_SECRET = os.getenv("_-cFcAr3nZV8FEfRv7Mmiq48ShGq8o-5")
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://novabot.info/callback")
 
 DISCORD_API_BASE = "https://discord.com/api"
