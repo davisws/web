@@ -9,7 +9,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
 intents.members = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="n!", intents=intents)
 
 # Load commands from JSON
 def load_custom_commands():
@@ -25,7 +25,7 @@ def save_custom_commands(commands_data):
 
 @bot.event
 async def on_ready():
-    print(f"✅ Nova Bot is online as {bot.user}")
+    print(f" Nova Bot is online as {bot.user}")
 
 @bot.event
 async def on_message(message):
@@ -89,6 +89,6 @@ async def ban(ctx, member: discord.Member, *, reason="No reason provided"):
 @commands.has_permissions(manage_messages=True)
 async def purge(ctx, amount: int = 10):
     await ctx.channel.purge(limit=amount)
-    await ctx.send(f"🧹 Purged {amount} messages", delete_after=3)
+    await ctx.send(f" Purged {amount} messages", delete_after=3)
 
 bot.run(TOKEN)
