@@ -14,7 +14,7 @@ DISCORD_API_BASE = "https://discord.com/api"
 OAUTH_SCOPE = "identify guilds"
 
 def is_authed():
-    return "user" in session
+    return "user" in session and "access_token" in session
 
 @app.route("/")
 def index():
@@ -68,7 +68,11 @@ def callback():
     headers = { "Content-Type": "application/x-www-form-urlencoded" }
     token_res = requests.post(f"{DISCORD_API_BASE}/oauth2/token", data=data, headers=headers)
     token_res.raise_for_status()
-    access_token = token_res.json()["access_token"]
+    token_json = token_res.json()
+
+    access_token = token_json.get("access_token")
+    if not access_token:
+        return "Failed to obtain access token", 400
 
     user_res = requests.get(f"{DISCORD_API_BASE}/users/@me", headers={"Authorization": f"Bearer {access_token}"})
     user_res.raise_for_status()
@@ -82,9 +86,10 @@ def servers():
         return redirect("/")
 
     try:
+        access_token = session["access_token"]
         guilds_res = requests.get(
             f"{DISCORD_API_BASE}/users/@me/guilds",
-            headers={"Authorization": f"Bearer {session['access_token']}"}
+            headers={"Authorization": f"Bearer {access_token}"}
         )
         guilds_res.raise_for_status()
         guilds = guilds_res.json()
@@ -93,8 +98,15 @@ def servers():
 
     return render_template_string("""
     <html>
-    <head><title>Servers</title></head>
-    <body style="background:#0d1117; color:white; text-align:center;">
+    <head>
+        <title>Servers</title>
+        <style>
+            body { background:#0d1117; color:white; font-family:sans-serif; text-align:center; padding-top:60px; }
+            .btn { background: #5865F2; padding: 12px 24px; border: none; border-radius: 8px; color: white; text-decoration: none; font-size: 16px; }
+            .btn:hover { background: #4752c4; }
+        </style>
+    </head>
+    <body>
         <h2>Manage Servers</h2>
         {% for g in guilds %}
             <div><a class="btn" href="/dashboard/{{ g['id'] }}">{{ g['name'] }}</a></div><br>
@@ -139,10 +151,8 @@ def dashboard(guild_id):
     <body>
         <h1>Edit Custom Command</h1>
         <form method="POST">
-            <input name="command" value="{{ data['command'] }}" placeholder="Command">
-            <br>
-            <textarea name="response" placeholder="Response">{{ data['response'] }}</textarea>
-            <br>
+            <input name="command" value="{{ data['command'] }}" placeholder="Command"><br>
+            <textarea name="response" placeholder="Response">{{ data['response'] }}</textarea><br>
             <button type="submit">Save</button>
         </form>
         <br><a class="btn" href="/servers">Back</a>
@@ -153,3 +163,6 @@ def dashboard(guild_id):
 def logout():
     session.clear()
     return redirect("/")
+
+if __name__ == "__main__":
+    app.run(debug=True)
