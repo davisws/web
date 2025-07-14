@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from flask import Flask, redirect, request, session, url_for, render_template_string
+from flask import Flask, redirect, request, session, render_template_string, url_for
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET", "supersecret")
@@ -9,64 +9,42 @@ app.secret_key = os.getenv("FLASK_SECRET", "supersecret")
 DISCORD_CLIENT_ID = os.getenv("1392627972581621782")
 DISCORD_CLIENT_SECRET = os.getenv("_-cFcAr3nZV8FEfRv7Mmiq48ShGq8o-5")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://novabot.info/callback")
+
 DISCORD_API_BASE = "https://discord.com/api"
 OAUTH_SCOPE = "identify guilds"
 
-# HTML Templates
-LOGIN_TEMPLATE = '''
-<html>
-<head><title>Login</title></head>
-<body>
-    <h1>Nova Bot Dashboard</h1>
-    <a href="/login">Login with Discord</a>
-</body>
-</html>
-'''
+def is_authed():
+    return "user" in session
 
-DASHBOARD_TEMPLATE = '''
-<html>
-<head><title>Dashboard</title></head>
-<body>
-    <h1>Welcome, {{user['username']}}</h1>
-    <h3>Your Servers</h3>
-    <ul>
-    {% for guild in guilds %}
-        <li><a href="/dashboard/{{guild['id']}}">{{guild['name']}}</a></li>
-    {% endfor %}
-    </ul>
-    <a href="/logout">Logout</a>
-</body>
-</html>
-'''
-
-COMMANDS_TEMPLATE = '''
-<html>
-<head><title>Custom Commands</title></head>
-<body>
-    <h1>Custom Commands for {{guild_id}}</h1>
-    <ul>
-    {% for cmd, response in commands.items() %}
-        <li><b>{{cmd}}</b>: {{response}}</li>
-    {% endfor %}
-    </ul>
-    <form method="post">
-        <input name="command" placeholder="Command name" required />
-        <input name="response" placeholder="Response" required />
-        <button type="submit">Add/Update</button>
-    </form>
-    <br><a href="/dashboard">Back</a>
-</body>
-</html>
-'''
-
-# Routes
 @app.route("/")
 def index():
-    return render_template_string(LOGIN_TEMPLATE)
+    user = session.get("user")
+    return render_template_string("""
+    <html>
+    <head>
+        <title>Nova Bot Dashboard</title>
+        <style>
+            body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 100px; }
+            .btn { background: #5865F2; padding: 12px 24px; border: none; border-radius: 8px; color: white; text-decoration: none; font-size: 16px; }
+            .btn:hover { background: #4752c4; }
+        </style>
+    </head>
+    <body>
+        <h1>Nova Bot Dashboard</h1>
+        {% if user %}
+            <p>Welcome, {{ user['username'] }}!</p>
+            <a class="btn" href="/servers">Manage Servers</a><br><br>
+            <a class="btn" href="/logout">Logout</a>
+        {% else %}
+            <a class="btn" href="/login">Login with Discord</a>
+        {% endif %}
+    </body>
+    </html>
+    """, user=user)
 
 @app.route("/login")
 def login():
-    if not all([DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET]):
+    if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
         return "Missing environment variables"
     return redirect(
         f"{DISCORD_API_BASE}/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={OAUTH_SCOPE}"
@@ -86,66 +64,89 @@ def callback():
         "redirect_uri": DISCORD_REDIRECT_URI,
         "scope": OAUTH_SCOPE,
     }
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(f"{DISCORD_API_BASE}/oauth2/token", data=data, headers=headers)
-    response.raise_for_status()
-    tokens = response.json()
 
-    user_res = requests.get(
-        f"{DISCORD_API_BASE}/users/@me",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
-    user = user_res.json()
+    headers = { "Content-Type": "application/x-www-form-urlencoded" }
+    token_res = requests.post(f"{DISCORD_API_BASE}/oauth2/token", data=data, headers=headers)
+    token_res.raise_for_status()
+    access_token = token_res.json()["access_token"]
 
-    guilds_res = requests.get(
-        f"{DISCORD_API_BASE}/users/@me/guilds",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
-    guilds = guilds_res.json()
+    user_res = requests.get(f"{DISCORD_API_BASE}/users/@me", headers={"Authorization": f"Bearer {access_token}"})
+    session["user"] = user_res.json()
+    session["access_token"] = access_token
+    return redirect("/")
 
-    session["user"] = user
-    session["guilds"] = guilds
-    return redirect("/dashboard")
-
-@app.route("/dashboard")
-def dashboard():
-    if "user" not in session:
+@app.route("/servers")
+def servers():
+    if not is_authed():
         return redirect("/")
-    return render_template_string(DASHBOARD_TEMPLATE, user=session["user"], guilds=session["guilds"])
+
+    guilds_res = requests.get(f"{DISCORD_API_BASE}/users/@me/guilds", headers={"Authorization": f"Bearer {session['access_token']}"})
+    guilds = guilds_res.json()
+    return render_template_string("""
+    <html>
+    <head><title>Servers</title></head>
+    <body style="background:#0d1117; color:white; text-align:center;">
+        <h2>Manage Servers</h2>
+        {% for g in guilds %}
+            <div><a class="btn" href="/dashboard/{{ g['id'] }}">{{ g['name'] }}</a></div><br>
+        {% endfor %}
+        <a class="btn" href="/">Home</a>
+    </body>
+    </html>
+    """, guilds=guilds)
 
 @app.route("/dashboard/<guild_id>", methods=["GET", "POST"])
-def custom_commands(guild_id):
-    if "user" not in session:
+def dashboard(guild_id):
+    if not is_authed():
         return redirect("/")
 
-    commands_path = f"commands/{guild_id}.json"
-    os.makedirs("commands", exist_ok=True)
+    path = f"data/{guild_id}.json"
+    if not os.path.exists("data"):
+        os.makedirs("data")
 
     if request.method == "POST":
         command = request.form.get("command")
         response = request.form.get("response")
-        with open(commands_path, "r+" if os.path.exists(commands_path) else "w+") as f:
-            try:
-                cmds = json.load(f)
-            except:
-                cmds = {}
-            cmds[command] = response
-            f.seek(0)
-            f.write(json.dumps(cmds))
-            f.truncate()
+        if command and response:
+            with open(path, "w") as f:
+                json.dump({"command": command, "response": response}, f)
 
-    if os.path.exists(commands_path):
-        with open(commands_path) as f:
-            commands = json.load(f)
+    if os.path.exists(path):
+        with open(path) as f:
+            data = json.load(f)
     else:
-        commands = {}
+        data = {"command": "", "response": ""}
 
-    return render_template_string(COMMANDS_TEMPLATE, guild_id=guild_id, commands=commands)
+    return render_template_string("""
+    <html><head>
+    <title>Custom Command</title>
+    <style>
+        body { background: #0d1117; color: white; text-align: center; padding-top: 100px; font-family: sans-serif; }
+        input, textarea { padding: 10px; margin: 10px; width: 300px; border-radius: 8px; border: none; }
+        button { background: #5865F2; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #4752c4; }
+    </style>
+    </head>
+    <body>
+        <h1>Edit Custom Command</h1>
+        <form method="POST">
+            <input name="command" value="{{ data['command'] }}" placeholder="Command">
+            <br>
+            <textarea name="response" placeholder="Response">{{ data['response'] }}</textarea>
+            <br>
+            <button type="submit">Save</button>
+        </form>
+        <br><a class="btn" href="/servers">Back</a>
+    </body></html>
+    """, data=data)
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
