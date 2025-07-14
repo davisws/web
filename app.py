@@ -45,7 +45,7 @@ def index():
 @app.route("/login")
 def login():
     if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
-        return "Missing environment variables"
+        return "Missing environment variables", 500
     return redirect(
         f"{DISCORD_API_BASE}/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={OAUTH_SCOPE}"
     )
@@ -71,6 +71,7 @@ def callback():
     access_token = token_res.json()["access_token"]
 
     user_res = requests.get(f"{DISCORD_API_BASE}/users/@me", headers={"Authorization": f"Bearer {access_token}"})
+    user_res.raise_for_status()
     session["user"] = user_res.json()
     session["access_token"] = access_token
     return redirect("/")
@@ -80,8 +81,16 @@ def servers():
     if not is_authed():
         return redirect("/")
 
-    guilds_res = requests.get(f"{DISCORD_API_BASE}/users/@me/guilds", headers={"Authorization": f"Bearer {session['access_token']}"})
-    guilds = guilds_res.json()
+    try:
+        guilds_res = requests.get(
+            f"{DISCORD_API_BASE}/users/@me/guilds",
+            headers={"Authorization": f"Bearer {session['access_token']}"}
+        )
+        guilds_res.raise_for_status()
+        guilds = guilds_res.json()
+    except Exception as e:
+        return f"Failed to fetch servers: {e}", 500
+
     return render_template_string("""
     <html>
     <head><title>Servers</title></head>
@@ -144,9 +153,3 @@ def dashboard(guild_id):
 def logout():
     session.clear()
     return redirect("/")
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-if __name__ == "__main__":
-    app.run(debug=True)
