@@ -19,7 +19,6 @@ from flask import Flask, redirect, request, session, render_template, url_for
 
     .navbar {
       background-color: #161b22;
-      padding: 15px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
