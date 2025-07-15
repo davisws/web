@@ -33,7 +33,6 @@ from flask import Flask, redirect, request, session, render_template, url_for
 
     .btn {
       background-color: #238636;
-      padding: 10px 20px;
       border: none;
       border-radius: 8px;
       color: white;
@@ -47,14 +46,12 @@ from flask import Flask, redirect, request, session, render_template, url_for
     }
 
     .container {
-      padding: 40px;
       max-width: 800px;
       margin: auto;
     }
 
     .card {
       background-color: #161b22;
-      padding: 25px;
       margin: 20px 0;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -62,7 +59,6 @@ from flask import Flask, redirect, request, session, render_template, url_for
 
     .input, textarea {
       width: 100%;
-      padding: 10px;
       border-radius: 6px;
       border: none;
       margin: 10px 0;
