@@ -1,192 +1,118 @@
-import os
-import json
-import glob
-import requests
-from flask import Flask, redirect, request, session, render_template_string, url_for
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lawn & Labor Solutions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-50 text-gray-800 font-sans scroll-smooth">
 
-app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET", "supersecret")
+  <!-- Navbar -->
+  <nav class="bg-green-800 text-white px-6 py-4 sticky top-0 shadow z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Lawn & Labor Solutions</h1>
+      <ul class="flex space-x-6 text-sm">
+        <li><a href="#home" class="hover:underline">Home</a></li>
+        <li><a href="#plans" class="hover:underline">Plans</a></li>
+        <li><a href="#services" class="hover:underline">Services</a></li>
+        <li><a href="#team" class="hover:underline">Team</a></li>
+        <li><a href="#contact" class="hover:underline">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
 
-DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
-DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
-DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI", "https://novabot.info/callback")
+  <!-- Hero Section -->
+  <section id="home" class="bg-green-100 py-16 text-center">
+    <h2 class="text-4xl font-bold mb-4">Welcome to Lawn & Labor Solutions</h2>
+    <p class="text-lg max-w-xl mx-auto">Providing reliable, affordable yard care and labor services tailored to your needs.</p>
+  </section>
 
-DISCORD_API_BASE = "https://discord.com/api"
-OAUTH_SCOPE = "identify guilds"
+  <!-- Plans Section -->
+  <section id="plans" class="max-w-6xl mx-auto p-6">
+    <h2 class="text-3xl font-semibold mb-6 text-center">Service Plans</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="border rounded-xl p-4 bg-white shadow">
+        <h3 class="text-xl font-bold mb-2">Basic Plan</h3>
+        <p class="text-sm text-gray-600 mb-2">Starting at $40/week (based on yard size)</p>
+        <ul class="list-disc ml-5">
+          <li>Mowing</li>
+          <li>Blowing</li>
+        </ul>
+      </div>
+      <div class="border rounded-xl p-4 bg-white shadow">
+        <h3 class="text-xl font-bold mb-2">Standard Plan</h3>
+        <p class="text-sm text-gray-600 mb-2">Starting at $55/week</p>
+        <ul class="list-disc ml-5">
+          <li>Mowing</li>
+          <li>Edging</li>
+          <li>Trimming</li>
+          <li>Blowing</li>
+        </ul>
+      </div>
+      <div class="border rounded-xl p-4 bg-white shadow">
+        <h3 class="text-xl font-bold mb-2">Premium Plan</h3>
+        <p class="text-sm text-gray-600 mb-2">Starting at $70/week</p>
+        <ul class="list-disc ml-5">
+          <li>Mowing</li>
+          <li>Edging</li>
+          <li>Trimming</li>
+          <li>Monthly Fertilizing</li>
+          <li>Flower Bed Weeding</li>
+          <li>Blowing</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-COMMANDS_FOLDER = "data"
-GLOBAL_COMMANDS_FILE = "commands.json"
+  <!-- Extra Services -->
+  <section id="services" class="bg-white py-12">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-3xl font-semibold mb-6 text-center">Additional Services</h2>
+      <ul class="grid md:grid-cols-2 gap-4 list-disc ml-5">
+        <li>Window Washing – Crystal clear results inside & out</li>
+        <li>Ditch Bank Burning – Safe controlled cleanup of overgrowth</li>
+        <li>Yard Clean-Up – Debris removal and seasonal leaf cleanup</li>
+        <li>Tree Trimming – Shaping, pruning, and branch removal</li>
+      </ul>
+    </div>
+  </section>
 
-def is_authed():
-    return "user" in session
+  <!-- Team Section -->
+  <section id="team" class="bg-green-100 py-12">
+    <div class="max-w-5xl mx-auto text-center px-6">
+      <h2 class="text-3xl font-semibold mb-6">Meet the Team</h2>
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div>
+          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
+          <h3 class="font-bold">David</h3>
+          <p class="text-sm text-gray-600">Owner & Lead Laborer</p>
+        </div>
+        <div>
+          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
+          <h3 class="font-bold">Chris</h3>
+          <p class="text-sm text-gray-600">Yard Tech & Tree Trimmer</p>
+        </div>
+        <div>
+          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
+          <h3 class="font-bold">Sarah</h3>
+          <p class="text-sm text-gray-600">Customer Service</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-def load_commands_file(path):
-    if not os.path.exists(path):
-        return {}
-    with open(path, "r") as f:
-        return json.load(f)
+  <!-- Contact -->
+  <section id="contact" class="bg-white py-12 text-center">
+    <h2 class="text-3xl font-semibold mb-4">Let's Get to Work!</h2>
+    <p class="text-lg mb-2">Text or Call us at:</p>
+    <p class="text-green-700 text-2xl font-bold mb-4">208-241-1024</p>
+    <p class="text-yellow-600 font-semibold">First mow only $25!</p>
+  </section>
 
-def save_commands_file(path, commands):
-    with open(path, "w") as f:
-        json.dump(commands, f, indent=4)
-
-def sync_guilds_to_global():
-    all_commands = {}
-    if not os.path.exists(COMMANDS_FOLDER):
-        os.makedirs(COMMANDS_FOLDER)
-    for filename in glob.glob(os.path.join(COMMANDS_FOLDER, "*.json")):
-        guild_commands = load_commands_file(filename)
-        # Merge, allowing later guilds to overwrite same commands if any
-        all_commands.update(guild_commands)
-    save_commands_file(GLOBAL_COMMANDS_FILE, all_commands)
-
-@app.route("/")
-def index():
-    user = session.get("user")
-    return render_template_string("""
-    <html><head><title>Nova Bot Dashboard</title><style>
-        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 100px; }
-        .btn { background: #5865F2; padding: 12px 24px; border: none; border-radius: 8px; color: white; text-decoration: none; font-size: 16px; }
-        .btn:hover { background: #4752c4; }
-    </style></head><body>
-        <h1>Nova Bot Dashboard</h1>
-        {% if user %}
-            <p>Welcome, {{ user['username'] }}!</p>
-            <a class="btn" href="/servers">Manage Servers</a><br><br>
-            <a class="btn" href="/logout">Logout</a>
-        {% else %}
-            <a class="btn" href="/login">Login with Discord</a>
-        {% endif %}
-    </body></html>
-    """, user=user)
-
-@app.route("/login")
-def login():
-    return redirect(
-        f"{DISCORD_API_BASE}/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={OAUTH_SCOPE}"
-    )
-
-@app.route("/callback")
-def callback():
-    code = request.args.get("code")
-    if not code:
-        return "Missing code", 400
-
-    data = {
-        "client_id": DISCORD_CLIENT_ID,
-        "client_secret": DISCORD_CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": DISCORD_REDIRECT_URI,
-        "scope": OAUTH_SCOPE,
-    }
-
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    token_res = requests.post(f"{DISCORD_API_BASE}/oauth2/token", data=data, headers=headers)
-    token_res.raise_for_status()
-    access_token = token_res.json()["access_token"]
-
-    user_res = requests.get(f"{DISCORD_API_BASE}/users/@me", headers={"Authorization": f"Bearer {access_token}"})
-    session["user"] = user_res.json()
-    session["access_token"] = access_token
-    return redirect("/")
-
-@app.route("/servers")
-def servers():
-    if not is_authed():
-        return redirect("/")
-
-    guilds_res = requests.get(
-        f"{DISCORD_API_BASE}/users/@me/guilds",
-        headers={"Authorization": f"Bearer {session['access_token']}"}
-    )
-    guilds = guilds_res.json()
-    return render_template_string("""
-    <html><head><title>Servers</title><style>
-        body { background:#0d1117; color:white; text-align:center; font-family:sans-serif; padding-top:100px; }
-        .btn { background: #5865F2; padding: 12px 24px; border: none; border-radius: 8px; color: white; text-decoration: none; font-size: 16px; }
-        .btn:hover { background: #4752c4; }
-    </style></head><body>
-        <h2>Manage Servers</h2>
-        {% for g in guilds %}
-            <div><a class="btn" href="/dashboard/{{ g['id'] }}">{{ g['name'] }}</a></div><br>
-        {% endfor %}
-        <a class="btn" href="/">Home</a>
-    </body></html>
-    """, guilds=guilds)
-
-@app.route("/dashboard/<guild_id>", methods=["GET", "POST"])
-def dashboard(guild_id):
-    if not is_authed():
-        return redirect("/")
-
-    if not os.path.exists(COMMANDS_FOLDER):
-        os.makedirs(COMMANDS_FOLDER)
-    path = os.path.join(COMMANDS_FOLDER, f"{guild_id}.json")
-
-    commands = load_commands_file(path)
-
-    if request.method == "POST":
-        # Add or update command
-        command = request.form.get("command")
-        response = request.form.get("response")
-        if command and response:
-            commands[command.lower()] = response
-            save_commands_file(path, commands)
-            sync_guilds_to_global()  # Sync all guilds to global commands.json
-
-    # Delete command
-    delete_cmd = request.args.get("delete")
-    if delete_cmd:
-        if delete_cmd.lower() in commands:
-            del commands[delete_cmd.lower()]
-            save_commands_file(path, commands)
-            sync_guilds_to_global()
-
-    return render_template_string("""
-    <html><head><title>Custom Commands - {{ guild_id }}</title><style>
-        body { background: #0d1117; color: white; text-align: center; padding-top: 30px; font-family: sans-serif; }
-        input, textarea { padding: 10px; margin: 10px 0; width: 300px; border-radius: 8px; border: none; }
-        button, a.btn { background: #5865F2; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin: 10px 5px; }
-        button:hover, a.btn:hover { background: #4752c4; }
-        table { margin: 0 auto; border-collapse: collapse; width: 80%; }
-        th, td { padding: 12px; border-bottom: 1px solid #444; }
-        th { text-align: left; }
-        a.delete { color: #e74c3c; cursor: pointer; text-decoration: none; }
-    </style></head><body>
-        <h1>Custom Commands for Guild: {{ guild_id }}</h1>
-
-        <form method="POST">
-            <input name="command" placeholder="Command name" required>
-            <textarea name="response" placeholder="Response text" required></textarea><br>
-            <button type="submit">Add / Update Command</button>
-        </form>
-
-        {% if commands %}
-            <h2>Existing Commands</h2>
-            <table>
-                <tr><th>Command</th><th>Response</th><th>Delete</th></tr>
-                {% for cmd, resp in commands.items() %}
-                    <tr>
-                        <td>{{ cmd }}</td>
-                        <td>{{ resp }}</td>
-                        <td><a class="delete" href="{{ url_for('dashboard', guild_id=guild_id) }}?delete={{ cmd }}">Delete</a></td>
-                    </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>No commands set yet.</p>
-        {% endif %}
-
-        <br><a class="btn" href="/servers">Back to servers</a>
-    </body></html>
-    """, guild_id=guild_id, commands=commands)
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
+  <!-- Footer -->
+  <footer class="bg-green-800 text-white text-center py-4">
+    <p>&copy; 2025 Lawn & Labor Solutions. All rights reserved.</p>
+  </footer>
+</body>
+</html>
