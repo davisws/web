@@ -1,5 +1,5 @@
 // server.js - Node.js Express server with Employee Dashboard and Calendar
-
+// server.js
 const express = require("express");
 const session = require("express-session");
 const http = require("http");
@@ -11,7 +11,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Express and Session Setup
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -20,15 +19,13 @@ const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
 });
-
 app.use(sessionMiddleware);
 
-// Socket.IO session sharing (manual solution for now)
+// Share session with socket.io manually
 io.use((socket, next) => {
   sessionMiddleware(socket.request, {}, next);
 });
 
-// In-memory user store
 const users = {
   Blake: "834bl",
 };
@@ -45,9 +42,9 @@ function authRequired(req, res, next) {
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Event storage (basic JSON file)
-let events = [];
+// Events JSON file
 const eventsFile = path.join(__dirname, "data", "events.json");
+let events = [];
 
 function loadEvents() {
   if (fs.existsSync(eventsFile)) {
@@ -86,16 +83,14 @@ app.get("/dashboard", authRequired, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
-// REST API for calendar events
+// Calendar API for events
 app.get("/api/events", authRequired, (req, res) => {
   res.json(events);
 });
 
 app.post("/api/events", authRequired, (req, res) => {
   const { title, start, end } = req.body;
-  if (!title || !start) {
-    return res.status(400).json({ error: "Title and start date required" });
-  }
+  if (!title || !start) return res.status(400).json({ error: "Title and start required" });
   const newEvent = { id: Date.now(), title, start, end };
   events.push(newEvent);
   saveEvents();
@@ -109,8 +104,22 @@ app.delete("/api/events/:id", authRequired, (req, res) => {
   res.json({ success: true });
 });
 
-// Tawk.to Embed Script Injection
-const tawkToScript = `<!--Start of Tawk.to Script--><script type=\"text/javascript\">var Tawk_API=Tawk_API||{},Tawk_LoadStart=new Date();(function(){var s1=document.createElement(\"script\"),s0=document.getElementsByTagName(\"script\")[0];s1.async=true;s1.src='https://embed.tawk.to/68780da23606072bf84a2d97/1j0afagrk';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0);})();</script><!--End of Tawk.to Script-->`;
+// Inject Tawk.to script into main page
+const tawkToScript = `
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/68780da23606072bf84a2d97/1j0afagrk';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+`;
 
 app.get("/", (req, res) => {
   const indexPath = path.join(__dirname, "public", "index.html");
@@ -120,17 +129,17 @@ app.get("/", (req, res) => {
   });
 });
 
-// Socket.IO Chat
+// Socket.io chat
 io.on("connection", (socket) => {
   const username = socket.request.session.username || "Guest";
-  console.log(`${username} connected`);
+  console.log(username + " connected");
 
   socket.on("chat message", (msg) => {
     io.emit("chat message", { user: username, message: msg });
   });
 
   socket.on("disconnect", () => {
-    console.log(`${username} disconnected`);
+    console.log(username + " disconnected");
   });
 });
 
