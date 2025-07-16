@@ -70,10 +70,10 @@
     <div class="max-w-5xl mx-auto px-6">
       <h2 class="text-3xl font-semibold mb-6 text-center">Additional Services</h2>
       <ul class="grid md:grid-cols-2 gap-4 list-disc ml-5">
-        <li>Window Washing – Crystal clear results inside & out</li>
-        <li>Ditch Bank Burning – Safe controlled cleanup of overgrowth</li>
-        <li>Yard Clean-Up – Debris removal and seasonal leaf cleanup</li>
-        <li>Tree Trimming – Shaping, pruning, and branch removal</li>
+       <li>Window Washing - Crystal clear results inside & out</li>
+        <li>Ditch Bank Burning  Safe controlled cleanup of overgrowth</li>
+        <li>Yard Clean-Up  Debris removal and seasonal leaf cleanup</li>
+        <li>Tree Trimming  Shaping, pruning, and branch removal</li>
       </ul>
     </div>
   </section>
