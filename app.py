@@ -84,19 +84,12 @@
       <h2 class="text-3xl font-semibold mb-6">Meet the Team</h2>
       <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
         <div>
-          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
-          <h3 class="font-bold">David</h3>
-          <p class="text-sm text-gray-600">Owner &amp; Lead Laborer</p>
-        </div>
-        <div>
-          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
-          <h3 class="font-bold">Chris</h3>
+          <h3 class="font-bold text-xl mb-1">Blake</h3>
           <p class="text-sm text-gray-600">Yard Tech &amp; Tree Trimmer</p>
         </div>
         <div>
-          <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-full mx-auto mb-2"/>
-          <h3 class="font-bold">Sarah</h3>
-          <p class="text-sm text-gray-600">Customer Service</p>
+          <h3 class="font-bold text-xl mb-1">Davis</h3>
+          <p class="text-sm text-gray-600">Mowing</p>
         </div>
       </div>
     </div>
@@ -117,4 +110,5 @@
 
 </body>
 </html>
+
 
