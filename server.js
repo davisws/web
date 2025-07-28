@@ -1,119 +1,84 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve the HTML form on root "/"
+const DATA_FILE = path.join(__dirname, 'appointments.json');
+
+// Auto-create the file if it doesn't exist
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
+}
+
+// Serve the HTML form
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
-    <html lang="en">
+    <html>
     <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Lawn Labor Solutions</title>
+      <title>Lawn Labor Solutions - Book Quote</title>
       <style>
-        body {
-          font-family: Arial, sans-serif;
-          background-color: #e8f5e9;
-          margin: 0;
-          padding: 0;
-        }
+        body { font-family: Arial; background: #e8f5e9; margin: 0; padding: 0; }
         .container {
-          width: 90%;
-          max-width: 500px;
-          margin: 50px auto;
-          background: white;
-          padding: 30px;
-          border-radius: 10px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          max-width: 500px; margin: 50px auto; background: white;
+          padding: 30px; border-radius: 10px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h1 {
-          color: #2e7d32;
-          text-align: center;
-        }
-        form {
-          display: flex;
-          flex-direction: column;
-        }
-        label {
-          margin-top: 15px;
-          margin-bottom: 5px;
-          font-weight: bold;
-        }
+        h1 { color: #2e7d32; text-align: center; }
+        label { margin-top: 15px; display: block; font-weight: bold; }
         input, textarea, button {
-          padding: 10px;
-          font-size: 16px;
-          border-radius: 5px;
-          border: 1px solid #ccc;
+          width: 100%; padding: 10px; margin-top: 5px;
+          border: 1px solid #ccc; border-radius: 5px;
         }
         button {
-          background-color: #43a047;
-          color: white;
+          background: #43a047; color: white;
+          border: none; cursor: pointer;
           margin-top: 20px;
-          cursor: pointer;
-          border: none;
-          transition: background 0.3s;
         }
-        button:hover {
-          background-color: #388e3c;
-        }
-        #responseMessage {
-          margin-top: 20px;
-          text-align: center;
-          font-weight: bold;
-        }
+        button:hover { background: #388e3c; }
+        #responseMessage { margin-top: 15px; text-align: center; font-weight: bold; }
       </style>
     </head>
     <body>
       <div class="container">
-        <h1>Schedule Lawn Labor</h1>
-        <form id="scheduleForm">
+        <h1>Schedule Lawn Care</h1>
+        <form id="form">
           <label>Name:</label>
           <input type="text" name="name" required />
-
           <label>Email:</label>
           <input type="email" name="email" required />
-
           <label>Location:</label>
-          <input type="text" name="location" />
-
+          <input type="text" name="location" required />
           <label>Date:</label>
           <input type="date" name="date" required />
-
           <label>Time:</label>
           <input type="time" name="time" required />
-
           <label>Notes:</label>
           <textarea name="notes" rows="3"></textarea>
-
-          <button type="submit">Schedule Appointment</button>
+          <button type="submit">Book Now</button>
         </form>
         <p id="responseMessage"></p>
       </div>
       <script>
-        document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+        document.getElementById('form').addEventListener('submit', async (e) => {
           e.preventDefault();
+          const form = e.target;
+          const data = Object.fromEntries(new FormData(form).entries());
 
-          const formData = new FormData(e.target);
-          const data = Object.fromEntries(formData);
+          const res = await fetch('/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
 
-          try {
-            const res = await fetch('/schedule', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            });
-
-            const result = await res.json();
-            document.getElementById('responseMessage').textContent = result.message || 'Success!';
-            e.target.reset();
-          } catch (err) {
-            document.getElementById('responseMessage').textContent = 'Error submitting form.';
-          }
+          const result = await res.json();
+          document.getElementById('responseMessage').textContent = result.message;
+          form.reset();
         });
       </script>
     </body>
@@ -121,21 +86,48 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Handle form submissions
+// Handle booking and save to appointments.json
 app.post('/schedule', (req, res) => {
   const { name, email, location, date, time, notes } = req.body;
 
-  if (!name || !email || !date || !time) {
+  if (!name || !email || !location || !date || !time) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
 
-  console.log('New schedule received:', req.body);
+  const newAppointment = {
+    id: Date.now(),
+    name,
+    email,
+    location,
+    date,
+    time,
+    notes
+  };
 
-  res.json({ message: 'Thanks! Your appointment was scheduled.' });
+  try {
+    const appointments = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+    appointments.push(newAppointment);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(appointments, null, 2));
+    console.log('New appointment saved:', newAppointment);
+    res.json({ message: 'Thanks! Your lawn care quote is scheduled.' });
+  } catch (err) {
+    console.error('Error saving appointment:', err);
+    res.status(500).json({ message: 'Server error saving appointment.' });
+  }
+});
+
+// Optional: View all appointments
+app.get('/appointments', (req, res) => {
+  try {
+    const data = fs.readFileSync(DATA_FILE, 'utf-8');
+    res.type('json').send(data);
+  } catch {
+    res.status(500).json({ message: 'Could not load appointments.' });
+  }
 });
 
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log('Server running at http://localhost:' + PORT);
+  console.log('🌿 Lawn Labor Solutions running at http://localhost:' + PORT);
 });
