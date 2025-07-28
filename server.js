@@ -10,9 +10,18 @@ app.use(express.urlencoded({ extended: true }));
 
 const DATA_FILE = path.join(__dirname, 'appointments.json');
 
-// Auto-create the file if it doesn't exist
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
+// Ensure appointments.json exists and is writable
+try {
+  if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
+    console.log('Created new appointments.json');
+  }
+
+  fs.appendFileSync(DATA_FILE, ''); // test write permission
+  console.log('Using file:', DATA_FILE);
+} catch (err) {
+  console.error('❌ Cannot access or write to appointments.json:', err);
+  process.exit(1);
 }
 
 // Serve the HTML form
@@ -86,11 +95,15 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Handle booking and save to appointments.json
+// Handle appointment booking
 app.post('/schedule', (req, res) => {
+  console.log('📥 Received POST at /schedule');
+  console.log('➡️ Data:', req.body);
+
   const { name, email, location, date, time, notes } = req.body;
 
   if (!name || !email || !location || !date || !time) {
+    console.warn('⚠️ Missing required fields');
     return res.status(400).json({ message: 'Missing required fields.' });
   }
 
@@ -108,10 +121,10 @@ app.post('/schedule', (req, res) => {
     const appointments = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
     appointments.push(newAppointment);
     fs.writeFileSync(DATA_FILE, JSON.stringify(appointments, null, 2));
-    console.log('New appointment saved:', newAppointment);
+    console.log('✅ Appointment saved:', newAppointment);
     res.json({ message: 'Thanks! Your lawn care quote is scheduled.' });
   } catch (err) {
-    console.error('Error saving appointment:', err);
+    console.error('❌ Error saving appointment:', err);
     res.status(500).json({ message: 'Server error saving appointment.' });
   }
 });
@@ -121,7 +134,8 @@ app.get('/appointments', (req, res) => {
   try {
     const data = fs.readFileSync(DATA_FILE, 'utf-8');
     res.type('json').send(data);
-  } catch {
+  } catch (err) {
+    console.error('❌ Error reading appointments:', err);
     res.status(500).json({ message: 'Could not load appointments.' });
   }
 });
@@ -129,5 +143,13 @@ app.get('/appointments', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log('🌿 Lawn Labor Solutions running at http://localhost:' + PORT);
+  console.log(`🌿 Lawn Labor Solutions running at http://localhost:${PORT}`);
 });
+
+/*
+📌 Manual test:
+curl -X POST http://localhost:3000/schedule \\
+  -H "Content-Type: application/json" \\
+  -d '{"name":"Test","email":"test@example.com","location":"123 Lane","date":"2025-08-01","time":"10:00","notes":"Testing"}'
+*/
+
